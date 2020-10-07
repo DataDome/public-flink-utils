@@ -38,6 +38,9 @@ object TypeSignature {
     new TypeSignature[E](e.getClass.getName.## :: values)
   }
 
+  /** It is debatable wether that method should be implicit. It would make all case class have an implicit signature
+   * automatically, which might make it easier to forget to update it if we add a type inside the case class (instead of
+   * as one of the arguments). */
   def forSimpleCaseClass[A: ClassTag](implicit aux: Aux[A]): TypeSignature[A] = aux.get
 
   def apply[A: ClassTag]: Builder[A] = Builder[A]()
