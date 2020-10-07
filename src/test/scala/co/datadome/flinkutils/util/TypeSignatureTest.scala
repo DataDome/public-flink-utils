@@ -81,6 +81,16 @@ class TypeSignatureTest extends AnyFunSuite with Matchers {
     s.hash should be(-1493981055)
   }
 
+  test("Complete creation") {
+    val signature = TypeSignature[Something]
+      .withEnum(Fruits)
+      .withType[String]
+      .withType[BotBuster]
+      .withTypeInfo[BotKiller]
+      .build
+    signature.hash should be(-214546114)
+  }
+
 }
 
 object TypeSignatureTest {
@@ -100,5 +110,7 @@ object TypeSignatureTest {
   object Vegetables extends Enumeration {
     val Carrot, Bean = Value
   }
+
+  class Something
 
 }
