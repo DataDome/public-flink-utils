@@ -4,7 +4,7 @@ import co.datadome.flinkutils.util.StateTypeSignature
 import org.apache.flink.streaming.api.datastream.DataStreamSink
 import org.apache.flink.streaming.api.scala.DataStream
 
-/** Typeclass for Flink elements than can receive a name and an UID. */
+/** Typeclass for Flink elements than can receive a name and a UID. */
 trait FlinkCanName[A] {
 
   def name(a: A)(n: String): A
@@ -14,10 +14,15 @@ trait FlinkCanName[A] {
   /** Sets both UID and name to the same value. */
   @inline final def uidName[S](a: A)(n: String): A = uid(name(a)(n))(n)
 
-  /** Sets the name an a state-based UID. The name is fixed to the value in argument, but the UID includes a hash of the
-   * state signature for the type parameter. Therefore, any ulterior modification to the structure of the state will
-   * make the UID change as well. This helps ensure that on any update of the Flink job, the state is recovered only if
-   * the state structure has not changed.
+  /** Sets the UID an a state-based UID. The UID includes a hash of the state signature for the type parameter.
+   * Therefore, any ulterior modification to the structure of the state will make the UID change as well. This helps
+   * ensure that on any update of the Flink job, the state is recovered only if the state structure has not changed.
+   * @tparam S State for which there must exists a StateSignature, typically a ProcessFunction.
+   */
+  @inline final def uidStated[S](a: A)(u: String)(implicit signature: StateTypeSignature[S]): A = uid(a)(s"$u-[${signature.hash}]")
+
+  /** Same as uidStated, but additionally sets the name as the same value as the String parameter (so the name will NOT
+   * change when the signature changes).
    * @tparam S State for which there must exists a StateSignature, typically a ProcessFunction.
    */
   @inline final def uidNameStated[S](a: A)(n: String)(implicit signature: StateTypeSignature[S]): A = uid(name(a)(n))(s"$n-[${signature.hash}]")
@@ -47,7 +52,11 @@ object FlinkCanName {
     @inline final def uidName(name: String): A =
       typeClassInstance.uidName(self)(name)
 
-    /** Sets a name and an UID, including into the UID the state signature */
+    /** Sets a UID, including into the UID the state signature */
+    @inline final def uidStated[S](name: String)(implicit signature: StateTypeSignature[S]): A =
+      typeClassInstance.uidStated[S](self)(name)
+
+    /** Sets a name and a UID, including into the UID the state signature */
     @inline final def uidNameStated[S](name: String)(implicit signature: StateTypeSignature[S]): A =
       typeClassInstance.uidNameStated[S](self)(name)
   }
